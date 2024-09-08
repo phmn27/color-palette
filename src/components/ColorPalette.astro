@@ -1,0 +1,98 @@
+---
+---
+
+<div class="max-w-6xl mx-auto p-6 bg-gray-100 rounded-lg shadow-lg">
+    <h1 class="text-3xl font-bold mb-6 text-center">Dynamic Color Palette with Examples</h1>
+    <div class="mb-6">
+        <label for="baseColor" class="block text-sm font-medium text-gray-700">Base Color (HEX):</label>
+        <input type="text" id="baseColor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="#7B9DFA">
+        <button id="updatePalette" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200">Update Palette</button>
+    </div>
+    <div id="colorPalette" class="flex mb-8"></div>
+    <div id="exampleContent" class="bg-white p-6 rounded-lg shadow">
+        <h1 class="text-4xl font-bold mb-4">Example Content</h1>
+        <h2 class="text-3xl font-semibold mb-3">Subtitle Here</h2>
+        <h3 class="text-2xl font-medium mb-2">Section Title</h3>
+        <p class="mb-4">This is an example of body text. It uses the "Text weak" color for better readability. The paragraph might contain <span>inline elements</span> that also use this color.</p>
+        <div class="strokestrong p-4 mb-4 rounded" style="border: 2px solid;">This div has a non border using the "Stroke Strong" color.</div>
+        <div class="strokeweak p-4 mb-4 rounded" style="border: 2px dashed;">This div has a decorative border using the "Stroke weak" color.</div>
+        <div class="p-4 rounded">This div uses the "Fill" color as an alternative background.</div>
+    </div>
+</div>
+
+<script>
+    import colorsys from 'colorsys';
+
+    const generatePalette = (baseHex) => {
+        const baseHsb = colorsys.hex2Hsv(baseHex);
+        const { h, s, v } = baseHsb;
+        return [
+            { name: "Brand", hsb: [h, s, v] },
+            { name: "Text strong", hsb: [h, 57, 20] },
+            { name: "Text weak", hsb: [h, 27, 35] },
+            { name: "Stroke strong", hsb: [h, 23, 55] },
+            { name: "Stroke weak", hsb: [h, 5, 94] },
+            { name: "Fill", hsb: [h, 2, 98] }
+        ].map(color => ({
+            ...color,
+            hex: colorsys.hsv2Hex({h: color.hsb[0], s: color.hsb[1], v: color.hsb[2]})
+        }));
+    };
+
+    const renderPalette = (palette) => {
+        const paletteContainer = document.getElementById('colorPalette');
+        paletteContainer.innerHTML = '';
+        palette.forEach(color => {
+            const swatch = document.createElement('div');
+            swatch.className = 'flex-1 h-24 flex flex-col justify-between p-2 text-xs';
+            swatch.style.backgroundColor = color.hex;
+            swatch.style.color = colorsys.hsv2Hex({h: color.hsb[0], s: color.hsb[1], v: 100 - color.hsb[2]});
+            swatch.innerHTML = `
+                <div class="font-bold">${color.name}</div>
+                <div>${color.hex}</div>
+                <div>H:${Math.round(color.hsb[0])} S:${Math.round(color.hsb[1])} B:${Math.round(color.hsb[2])}</div>
+            `;
+            paletteContainer.appendChild(swatch);
+        });
+    };
+
+    const applyColors = (palette) => {
+        const brandColor = palette.find(color => color.name === "Brand").hex;
+        const textStrongColor = palette.find(color => color.name === "Text strong").hex;
+        const textWeakColor = palette.find(color => color.name === "Text weak").hex;
+        const strokeStrongColor = palette.find(color => color.name === "Stroke strong").hex;
+        const strokeWeakColor = palette.find(color => color.name === "Stroke weak").hex;
+        const fillColor = palette.find(color => color.name === "Fill").hex;
+
+        const exampleContent = document.getElementById('exampleContent');
+        const updatePaletteBtn = document.getElementById('updatePalette');
+
+        exampleContent.querySelectorAll('h1, h2, h3').forEach(el => el.style.color = textStrongColor);
+        exampleContent.querySelectorAll('p, span').forEach(el => el.style.color = textWeakColor);
+        exampleContent.querySelectorAll('.strokestrong').forEach(el => el.style.borderColor = strokeStrongColor);
+        exampleContent.querySelector('.strokeweak').style.borderColor = strokeWeakColor;
+        exampleContent.querySelector('div:last-child').style.backgroundColor = fillColor;
+        updatePaletteBtn.style.backgroundColor = brandColor;
+    };
+
+    const updatePalette = () => {
+        const baseColorInput = document.getElementById('baseColor');
+        const hexColor = baseColorInput.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(hexColor)) {
+            const palette = generatePalette(hexColor);
+            renderPalette(palette);
+            applyColors(palette);
+        } else {
+            alert('Please enter a valid HEX color (e.g., #7B9DFA)');
+        }
+    };
+
+    // Use 'load' event instead of 'DOMContentLoaded' for Astro
+    window.addEventListener('load', () => {
+        const initialPalette = generatePalette("#7B9DFA");
+        renderPalette(initialPalette);
+        applyColors(initialPalette);
+        document.getElementById('baseColor').value = "#7B9DFA";
+        document.getElementById('updatePalette').addEventListener('click', updatePalette);
+    });
+</script>
